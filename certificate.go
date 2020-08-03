@@ -62,7 +62,7 @@ func JavaKeyStoreLoadFile(filePath string, password string) (keyStore KeyStore, 
 
 func NewTlsFromJavaKeyStore(jksPath, alias, password string) (config *tls.Config, err error) {
 	var keyStore KeyStore
-	var certificates []*x509.Certificate
+	var certificate *x509.Certificate
 
 	config = &tls.Config{}
 
@@ -71,15 +71,13 @@ func NewTlsFromJavaKeyStore(jksPath, alias, password string) (config *tls.Config
 		return
 	}
 
-	_, certificates, err = JavaKeyStoreGetCertificates(keyStore, alias, password)
+	certificate, err = JavaKeyStoreGetCertificateByAlias(keyStore, alias)
 	if err != nil {
 		return
 	}
 
 	caCertPool := x509.NewCertPool()
-	for _, certificate := range certificates {
-		caCertPool.AddCert(certificate)
-	}
+	caCertPool.AddCert(certificate)
 	config.RootCAs = caCertPool
 
 	return
