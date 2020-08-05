@@ -64,7 +64,7 @@ func NewTlsFromJavaKeyStore(jksPath, alias, password string) (config *tls.Config
 	var keyStore KeyStore
 	var certificate *x509.Certificate
 
-	config = &tls.Config{}
+	config = newTlsConfig()
 
 	keyStore, err = JavaKeyStoreLoadFile(jksPath, password)
 	if err != nil {
@@ -91,14 +91,17 @@ func NewTlsFromX509KeyPar(certFile, keyFile []byte) (config *tls.Config, err err
 		return
 	}
 
-	config = &tls.Config{Certificates: []tls.Certificate{certificate}}
+	config = newTlsConfig()
+	config.Certificates = []tls.Certificate{
+		certificate,
+	}
 	return
 }
 
 func NewTlsFromX509KeyPairFile(certFilePath, keyFilePath string) (config *tls.Config, err error) {
 	var certFile, keyFile []byte
 
-	config = &tls.Config{}
+	config = newTlsConfig()
 
 	certFile, err = LoadFile(certFilePath)
 	if err != nil {
@@ -114,7 +117,7 @@ func NewTlsFromX509KeyPairFile(certFilePath, keyFilePath string) (config *tls.Co
 }
 
 func NewTlsFromCertificates(certificatesList [][]byte) (config *tls.Config, err error) {
-	config = &tls.Config{}
+	config = newTlsConfig()
 
 	caCertPool := x509.NewCertPool()
 	for _, certificate := range certificatesList {
@@ -124,4 +127,15 @@ func NewTlsFromCertificates(certificatesList [][]byte) (config *tls.Config, err 
 	config.RootCAs = caCertPool
 
 	return
+}
+
+func newTlsConfig() (config *tls.Config) {
+	return &tls.Config{
+		MinVersion: tls.VersionTLS13,
+		CipherSuites: []uint16{
+			tls.TLS_AES_128_GCM_SHA256,
+			tls.TLS_AES_256_GCM_SHA384,
+			tls.TLS_CHACHA20_POLY1305_SHA256,
+		},
+	}
 }
